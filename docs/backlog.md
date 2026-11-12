@@ -17,6 +17,8 @@ hora. Cada item diz o porquê, para não ser preciso redescobrir o motivo depois
 
 ### Infraestrutura
 
+- **Feito:** `compose.yaml`, `src/inciso/esquema.sql`, `src/inciso/banco.py`, com
+  busca exata por cosseno e serviço no CI. ADR 0003.
 - **Postgres + pgvector local via Docker Desktop**, com backend WSL2
   (`wsl --install` exige reiniciar o Windows; depois,
   `winget install --id Docker.DockerDesktop -e`). A mesma imagem
@@ -93,6 +95,11 @@ documentos nos temas existentes, não temas novos.
 - Registrar no README o gasto com a API comercial.
 
 ## Fase 4
+
+- Se o Emerson precisar rodar a API na máquina dele (Windows), o Controle
+  Inteligente de Aplicativos pode bloquear as bibliotecas compiladas, como
+  aconteceu com o `psycopg` na máquina do Felipe. Saídas: a API roda num
+  container Docker, ou na máquina do Felipe.
 
 - Se a API precisar de latência menor que a da busca exata, criar um índice HNSW
   **parcial por modelo** (`WHERE model = ...`, com cast para a dimensão). O
