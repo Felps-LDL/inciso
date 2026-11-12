@@ -1,0 +1,103 @@
+# Backlog
+
+O que pertence a uma fase futura fica anotado aqui, e não é implementado antes da
+hora. Cada item diz o porquê, para não ser preciso redescobrir o motivo depois.
+
+## Fase 1
+
+### Antes de o Emerson baixar em escala (durante o piloto de 5 documentos)
+
+- **Teste de extração de texto dos PDFs.** Extrair o texto de 2 ou 3 PDFs do
+  piloto (CVM e Bacen) e conferir se os marcadores "Art.", "§" e os incisos em
+  romano sobrevivem, sem cabeçalho de página nem hifenização no meio de artigo.
+  Se não sobreviverem, o corpus troca para a versão HTML oficial. É o item mais
+  caro de errar: o parser da Fase 2 depende disso.
+- **Medir o tamanho real do corpus** com os 5 primeiros PDFs. A estimativa é de
+  20 a 60 MB para 60 documentos.
+
+### Infraestrutura
+
+- **Postgres + pgvector local via Docker Desktop**, com backend WSL2
+  (`wsl --install` exige reiniciar o Windows; depois,
+  `winget install --id Docker.DockerDesktop -e`). A mesma imagem
+  `pgvector/pgvector` roda como `services:` no CI. Vira ADR na Fase 1, junto com o
+  "por que pgvector, e não um banco vetorial dedicado".
+- Pasta `data/`, já no `.gitignore`, para os derivados da ingestão.
+- Pasta `notebooks/` para exploração, fora de `src/` e fora do caminho principal.
+
+### Formato do gabarito de avaliação (primeiro ADR da Fase 1)
+
+Precisa ser decidido **antes** de o Emerson escrever a primeira pergunta.
+
+- O gabarito é **independente do chunking**: `doc_id` + **trecho literal** + a
+  referência estrutural legível (por exemplo, "art. 5º, § 2º, III"). Nunca um id
+  de chunk, que deixa de existir quando o chunking muda na Fase 2.
+- O critério de acerto é por **sobreposição** com o trecho (por exemplo, ≥ 50%
+  dos caracteres), e não "contém o trecho inteiro", que pune artificialmente o
+  chunking fixo.
+- Reportar o **tamanho médio do chunk** (ou os tokens recuperados) ao lado do
+  recall@5. Chunk maior ganha recall de graça.
+- O critério entra no teste feito à mão da função de recall@k. Mudar o critério
+  depois muda todos os números já publicados.
+- Guia `eval/README.md` para o Emerson, com **piloto de 5 perguntas** revisadas
+  antes das outras.
+
+### Risco: sobreposição léxica no conjunto de avaliação
+
+Se a pergunta repetir as palavras do trecho-resposta, a busca acerta por
+coincidência de vocabulário. O recall@5 fica perto de 1,0 para qualquer
+estratégia e qualquer modelo, e a comparação das Fases 2 e 3 perde o sentido.
+
+**Regra operacional para o `eval/README.md`:** escreva a pergunta como um usuário
+a faria, sem conhecer o texto da norma. Não copie substantivos nem verbos do
+trecho, a não ser termos técnicos sem sinônimo (por exemplo, "PLD/FT" e
+"cotista").
+
+| Ruim | Bom |
+|---|---|
+| "Quais são as hipóteses em que o administrador fiduciário deve comunicar fato relevante aos cotistas?" Copia "administrador fiduciário", "comunicar", "fato relevante" e "cotistas" do trecho. | "Se acontecer algo grave com o fundo, quem tem que avisar os investidores, e em quanto tempo?" |
+
+**Verificação mecânica:** um script calcula a fração de palavras da pergunta (sem
+stopwords) que aparecem no trecho, e sinaliza as perguntas acima de um limiar. O
+piloto de 5 perguntas é onde se calibram a regra e o limiar com o Emerson.
+
+**Alarme:** se o chunking ingênuo der recall@5 ≥ 0,9, ou o conjunto de avaliação
+está fácil demais, ou o corpus tem poucos distratores. Nesse caso, entram mais
+documentos nos temas existentes, não temas novos.
+
+### Esquema do banco: a Fase 2 e a Fase 3 precisam ser inserções, não migrations
+
+- `documents`: `doc_id` (o nome do arquivo sem extensão), os metadados do
+  `controle.csv`, o `sha256` do PDF, o texto normalizado extraído (guardado uma
+  vez) e a `extraction_version`.
+- `chunks`: id, `doc_id`, **`strategy`** (`fixed-800-100`, `structural-v1`...),
+  `char_start` e `char_end` no texto do documento, o texto, e
+  **`structure_path` anulável**. Ele fica nulo na Fase 1 e é preenchido na Fase 2.
+- `embeddings`, separada de `chunks`: PK `(chunk_id, model)`, coluna `vector`
+  **sem dimensão fixa**. Os três modelos da Fase 3 têm dimensões diferentes.
+- **Sem índice ANN na avaliação.** Com poucos milhares de vetores, a busca exata é
+  instantânea, e o HNSW/IVFFlat introduz um erro de recall próprio, que
+  contaminaria a medição. Isso evita também o limite de 2.000 dimensões do HNSW
+  em `vector`.
+- Execuções de avaliação registradas em `results/*.json`, versionado: estratégia,
+  modelo, k, critério de acerto, versão do conjunto de avaliação e commit. É isso
+  que liga cada número do README ao código que o produziu.
+
+## Fase 3
+
+- Modelos com mais de 2.000 dimensões (por exemplo, os comerciais de 3.072)
+  funcionam com busca exata. Se algum dia precisarem de índice, use `halfvec` ou
+  dimensão reduzida.
+- Registrar no README o gasto com a API comercial.
+
+## Fase 4
+
+- Se a API precisar de latência menor que a da busca exata, criar um índice HNSW
+  **parcial por modelo** (`WHERE model = ...`, com cast para a dimensão). O
+  esquema não muda.
+
+## Sem fase definida
+
+- Hooks de pre-commit (ruff). Hoje o CI cobre isso. Reavaliar se o vai-e-volta
+  de PR por formatação começar a custar tempo.
+- Matriz Windows no CI. Só se aparecer um bug que dependa de plataforma.
