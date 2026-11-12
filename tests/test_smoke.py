@@ -5,4 +5,4 @@ import inciso
 
 def test_pacote_instalado() -> None:
     assert inciso.__name__ == "inciso"
-    assert version("inciso") == "9.9.9"
+    assert version("inciso") == "0.0.1"
