@@ -123,26 +123,45 @@ assunto tiver uma vírgula, coloque o texto entre aspas:
 Os comandos abaixo rodam no **PowerShell**. No VS Code, abra o terminal pelo menu
 *Terminal → New Terminal*.
 
-**a) Instalar o Git**
+Se você ainda não tem o VS Code, abra o **PowerShell** pelo menu Iniciar (digite
+"PowerShell" e clique no resultado) e use-o nos passos a) e b). Do passo c) em
+diante, use o terminal do VS Code.
+
+**a) Conferir o instalador do Windows**
 
 ```
+winget --version
+```
+
+O `winget` é o instalador de programas do Windows. Se aparecer um número de
+versão, siga. Se aparecer um erro dizendo que o comando não foi reconhecido,
+instale o "App Installer" pela Microsoft Store e tente de novo.
+
+**b) Instalar o VS Code e o Git**
+
+```
+winget install --id Microsoft.VisualStudioCode -e --source winget
 winget install --id Git.Git -e --source winget
 ```
 
-O `winget` é o instalador de programas do Windows. Esse comando baixa e instala o
-Git, o programa que guarda o histórico de mudanças do projeto.
+O primeiro comando instala o VS Code, o editor onde você vai trabalhar. O segundo
+instala o Git, o programa que guarda o histórico de mudanças do projeto. Se o
+Windows perguntar se permite que o programa faça alterações, responda que sim.
 
-Depois de instalar, **feche o VS Code inteiro e abra de novo**. O terminal só
-passa a enxergar programas recém-instalados quando o VS Code reinicia. Para
-conferir se deu certo:
+Depois de instalar, **feche todas as janelas do PowerShell e do VS Code e abra o
+VS Code de novo**. Um terminal só enxerga programas instalados depois que é
+aberto de novo. A partir daqui, use o terminal do VS Code: menu *Terminal → New
+Terminal*. Para conferir se deu certo:
 
 ```
 git --version
 ```
 
-Se aparecer algo como `git version 2.xx`, funcionou.
+Se aparecer algo como `git version 2.xx`, funcionou. Se aparecer "não é
+reconhecido como nome de cmdlet", o terminal ainda é o antigo: feche o VS Code
+inteiro e abra de novo.
 
-**b) Dizer ao Git quem você é**
+**c) Dizer ao Git quem você é**
 
 ```
 git config --global user.name "Seu Nome"
@@ -152,10 +171,23 @@ git config --global user.email "o-email-da-sua-conta-do-github@exemplo.com"
 Cada mudança que você registrar vai levar esse nome e esse e-mail. Use o mesmo
 e-mail da sua conta do GitHub, assim o GitHub mostra as mudanças como suas.
 
-**c) Aceitar o convite do repositório**
+**d) Escolher o VS Code como editor do Git**
 
-O Felipe te adiciona como colaborador e o GitHub manda um e-mail de convite.
-Aceite antes de seguir.
+```
+git config --global core.editor "code --wait"
+```
+
+Às vezes o Git precisa que você escreva ou confirme uma mensagem e abre um editor
+para isso. Sem esse comando, ele abre um editor de terminal chamado vim, que é
+difícil de fechar para quem nunca usou. Com ele, abre uma aba no VS Code: você
+confere a mensagem, salva e fecha a aba, e o Git continua.
+
+**e) Aceitar o convite do repositório**
+
+O Felipe te adicionou como colaborador, e o GitHub mandou um convite para o
+e-mail da sua conta. Você também encontra o convite em
+https://github.com/Felps-LDL/inciso/invitations. Aceite antes do primeiro PR:
+sem isso, o GitHub recusa o envio das suas mudanças.
 
 ---
 
@@ -171,12 +203,17 @@ em si. É você passar uma vez pelo ciclo inteiro com algo que não quebra nada.
 cd ~\Documents
 git clone https://github.com/Felps-LDL/inciso.git
 cd inciso
+code .
 ```
 
-- `cd` muda de pasta.
+- `cd` muda de pasta. `~\Documents` é a sua pasta Documentos.
 - `git clone` copia o repositório do GitHub para uma pasta nova chamada `inciso`.
-- Na primeira vez que o Git falar com o GitHub, ele pode abrir o navegador para
-  você entrar na sua conta.
+- `code .` abre essa pasta no VS Code. O ponto quer dizer "a pasta onde estou".
+  Abre uma janela nova. Continue nela, porque o terminal dela já está dentro do
+  projeto.
+- Na janela nova, o VS Code pode perguntar se você confia nos autores da pasta.
+  Responda que sim. Ele também deve sugerir instalar as extensões recomendadas.
+  Aceite: é assim que o Rainbow CSV da seção 3 é instalado.
 
 **2. Criar uma branch**
 
@@ -226,7 +263,11 @@ git push -u origin corpus/primeiro-documento
 ```
 
 Isso manda a sua branch para o GitHub. O `-u` faz o Git lembrar para onde enviar,
-e nas próximas vezes `git push` sozinho já funciona. A resposta do comando traz um
+e nas próximas vezes `git push` sozinho já funciona.
+
+**Na primeira vez**, o Git abre uma janela pedindo para entrar no GitHub. Escolha
+entrar pelo navegador (*Sign in with your browser*), faça o login e autorize. O
+Windows guarda esse acesso, e nas próximas vezes ele não pergunta mais. A resposta do comando traz um
 link começando com `https://github.com/.../pull/new/...`.
 
 **8. Abrir o PR**
