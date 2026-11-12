@@ -169,7 +169,7 @@ em si. É você passar uma vez pelo ciclo inteiro com algo que não quebra nada.
 
 ```
 cd ~\Documents
-git clone https://github.com/<usuario-do-felipe>/inciso.git
+git clone https://github.com/Felps-LDL/inciso.git
 cd inciso
 ```
 

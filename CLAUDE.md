@@ -24,8 +24,9 @@ Então velocidade no código e cuidado nos conceitos de recuperação.
 
 ## Estado atual
 
-Fase: **0**
-Última coisa concluída: _(nada ainda)_
+Fase: **1** (a começar)
+Última coisa concluída: Fase 0 (2026-11-11): uv + poe, CI com o check `check` validado
+contra quatro quebras de propósito, `main` protegida, validador e guia do corpus.
 
 > Atualize estas duas linhas ao fim de cada sessão.
 
