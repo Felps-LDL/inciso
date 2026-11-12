@@ -1,0 +1,21 @@
+# Postgres + pgvector para desenvolvimento local. A mesma imagem roda como serviço no CI.
+# Credenciais de desenvolvimento, sem valor fora desta máquina; produção não existe neste projeto.
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.7-pg18
+    environment:
+      POSTGRES_USER: inciso
+      POSTGRES_PASSWORD: inciso
+      POSTGRES_DB: inciso
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inciso -d inciso"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  pgdata:
