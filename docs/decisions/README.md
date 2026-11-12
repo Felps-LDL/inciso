@@ -36,3 +36,4 @@ revermos a decisão.
 ## Índice
 
 - [0001. Tarefas com uv e poethepoet, não Makefile](0001-tarefas-com-uv-e-poe.md)
+- [0002. Gabarito por trecho e critério de acerto por cobertura](0002-gabarito-por-trecho-e-criterio-de-acerto.md)

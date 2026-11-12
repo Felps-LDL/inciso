@@ -27,7 +27,9 @@ hora. Cada item diz o porquê, para não ser preciso redescobrir o motivo depois
 
 ### Formato do gabarito de avaliação (primeiro ADR da Fase 1)
 
-Precisa ser decidido **antes** de o Emerson escrever a primeira pergunta.
+**Decidido no ADR 0002 e implementado em `src/inciso/avaliacao.py`.** Falta o guia
+`eval/README.md` para o Emerson. MRR como métrica secundária, para capturar a
+posição dentro do top-k, só entra se a comparação das Fases 2 e 3 precisar dele.
 
 - O gabarito é **independente do chunking**: `doc_id` + **trecho literal** + a
   referência estrutural legível (por exemplo, "art. 5º, § 2º, III"). Nunca um id
