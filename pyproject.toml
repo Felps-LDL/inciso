@@ -1,0 +1,36 @@
+[project]
+name = "inciso"
+version = "0.0.1"
+description = "Busca com RAG sobre documentos normativos financeiros brasileiros, com qualidade de recuperação medida."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "poethepoet",
+    "pytest",
+    "ruff",
+]
+
+[build-system]
+requires = ["uv_build>=0.13,<0.14"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+
+[tool.poe.tasks]
+lint = { cmd = "ruff check .", help = "Lint com ruff" }
+fmt = { cmd = "ruff format .", help = "Formata o código" }
+fmt-check = { cmd = "ruff format --check .", help = "Confere a formatação sem alterar" }
+test = { cmd = "pytest", help = "Roda os testes" }
+check = { sequence = ["lint", "fmt-check", "test"], help = "Tudo que o CI roda, na mesma ordem" }
