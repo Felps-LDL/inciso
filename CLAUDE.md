@@ -24,9 +24,11 @@ Então velocidade no código e cuidado nos conceitos de recuperação.
 
 ## Estado atual
 
-Fase: **1** (a começar)
-Última coisa concluída: Fase 0 (2026-11-11): uv + poe, CI com o check `check` validado
-contra quatro quebras de propósito, `main` protegida, validador e guia do corpus.
+Fase: **1** (em andamento, PR #3 em rascunho)
+Última coisa concluída (2026-11-12): recall@k por cobertura de trecho (ADR 0002) e
+Postgres + pgvector com busca exata (ADR 0003); banco local no Neon via `DATABASE_URL`.
+Próximo: teste de extração de texto dos PDFs, com o piloto do Emerson (CVM 175 já
+enviada na branch `corpus/primeiro-documento`, ainda sem PR).
 
 > Atualize estas duas linhas ao fim de cada sessão.
 
