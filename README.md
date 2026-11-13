@@ -83,16 +83,18 @@ ficou para depois, em [`docs/backlog.md`](docs/backlog.md).
 ## Como rodar
 
 Requisitos: [uv](https://docs.astral.sh/uv/), que instala o Python certo
-sozinho, e Docker, para o Postgres com pgvector.
+sozinho, e um Postgres com pgvector, por um destes caminhos:
+
+- **Gerenciado** (ex.: Neon, plano gratuito): defina a variável `DATABASE_URL` com
+  a URL de conexão.
+- **Docker**: `uv run poe db` sobe o `compose.yaml`, com a mesma imagem do CI. Sem
+  `DATABASE_URL`, o código usa esse banco local.
 
 ```
 uv sync
-uv run poe db
 uv run poe check
 ```
 
-- `poe db` sobe o Postgres local com pgvector (`compose.yaml`), a mesma imagem
-  usada no CI.
 - `poe check` roda o lint, a conferência de formatação e os testes, na mesma ordem
   do CI. Sem o banco no ar, os testes de integração são pulados localmente. No CI
   eles são obrigatórios.

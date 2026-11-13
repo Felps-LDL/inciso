@@ -107,6 +107,14 @@ documentos nos temas existentes, não temas novos.
 
 ## Sem fase definida
 
+- **WSL2 e Docker na máquina do Felipe.** Os recursos apareciam ativos, mas o WSL
+  dizia "virtualização não habilitada". Na reinstalação, o
+  `dism /enable-feature:VirtualMachinePlatform` ficou preso no download pelo
+  Windows Update (o progresso alternava entre 0% e 50%). Hoje os recursos estão
+  desativados. Tentar de novo depois de uma próxima atualização do Windows. Se a
+  mensagem original voltar, abrir uma issue em microsoft/WSL com a saída do
+  `wsl --status`. Até lá, o desenvolvimento local usa o Neon (ADR 0003).
+
 - Hooks de pre-commit (ruff). Hoje o CI cobre isso. Reavaliar se o vai-e-volta
   de PR por formatação começar a custar tempo.
 - Matriz Windows no CI. Só se aparecer um bug que dependa de plataforma.

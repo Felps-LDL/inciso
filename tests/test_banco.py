@@ -35,7 +35,7 @@ def conn() -> Iterator[psycopg.Connection]:
     except psycopg.OperationalError as erro:
         if os.environ.get("INCISO_EXIGIR_BANCO") == "1":
             pytest.fail(f"banco exigido e inacessível: {erro}")
-        pytest.skip("banco inacessível; suba com: uv run poe db")
+        pytest.skip("banco inacessível; defina DATABASE_URL ou suba o local com: uv run poe db")
     with conexao:
         aplicar_esquema(conexao)
         yield conexao

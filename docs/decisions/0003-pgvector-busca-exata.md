@@ -13,8 +13,11 @@ medida.
 
 ## Decisão
 
-- **Postgres com a extensão pgvector**, imagem `pgvector/pgvector:0.8.7-pg18`,
-  rodando via Docker localmente e como serviço no CI.
+- **Postgres com a extensão pgvector.** No CI, roda como serviço com a imagem
+  `pgvector/pgvector:0.8.7-pg18`. No desenvolvimento local, usa um Postgres
+  gerenciado no Neon (plano gratuito, com pgvector), acessado pela variável
+  `DATABASE_URL`. O `compose.yaml` com a mesma imagem do CI fica como alternativa,
+  para quando houver Docker.
 - **Busca exata por distância de cosseno** (`ORDER BY embedding <=> consulta`), sem
   índice HNSW nem IVFFlat.
 - **O vetor sem dimensão fixa**, numa tabela `embeddings` separada de `chunks`, com
@@ -41,12 +44,19 @@ medida.
 
 ## Consequências
 
-- Local e CI usam a mesma imagem.
+- O CI usa uma imagem fixa. O banco local (Neon) pode ter outra versão do Postgres
+  e do pgvector. O esquema e as consultas usam só recursos básicos do pgvector
+  (`vector` e `<=>`), então a diferença não deve afetar os resultados. Os números
+  oficiais do README vêm do mesmo código, rodado contra qualquer um dos dois.
 - A busca exata é linear no número de chunks. Com milhares, leva milissegundos; com
   milhões, seria inviável, mas isso está fora do escopo.
 - Se a API da Fase 4 precisar de latência menor, entra um índice HNSW parcial por
   modelo, sem mudar o esquema e fora do caminho da avaliação.
 - No Windows 11, o Controle Inteligente de Aplicativos bloqueia a DLL compilada do
   `psycopg-binary`, e tende a bloquear outras bibliotecas compiladas (torch,
-  tokenizers). Como a máquina também é de uso pessoal, o controle continua ligado e
-  o Python do projeto roda no WSL (Ubuntu), igual ao CI.
+  tokenizers). Na máquina do Felipe ele foi desativado, e a proteção ficou igual à
+  de um Windows comum (Defender, SmartScreen, firewall, UAC).
+- O Docker Desktop precisa do WSL2, que não funcionou na máquina do Felipe. Os
+  recursos apareciam ativos, mas o WSL dizia "virtualização não habilitada". A
+  reinstalação dos recursos ficou presa no download pelo Windows Update. Daí o Neon
+  no desenvolvimento local. A causa raiz não foi identificada (ver backlog).
