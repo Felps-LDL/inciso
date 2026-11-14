@@ -40,6 +40,7 @@ fmt-check = { cmd = "ruff format --check .", help = "Confere a formatação sem 
 test = { cmd = "pytest", help = "Roda os testes" }
 check = { sequence = ["lint", "fmt-check", "test"], help = "Tudo que o CI roda, na mesma ordem" }
 ingerir = { cmd = "python -m inciso.ingestao", help = "Ingere os PDFs de corpus/ no banco" }
+chunkear = { cmd = "python -m inciso.chunking", help = "Gera os chunks de tamanho fixo no banco" }
 db = { cmd = "docker compose up -d --wait", help = "Sobe o Postgres + pgvector local" }
 db-parar = { cmd = "docker compose stop", help = "Para o Postgres local (mantém os dados)" }
 db-apagar = { cmd = "docker compose down -v", help = "Remove o Postgres local e os dados" }

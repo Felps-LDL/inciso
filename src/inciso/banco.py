@@ -75,19 +75,29 @@ def inserir_documento(conn: psycopg.Connection, doc: Documento) -> None:
 
 
 def inserir_chunks(conn: psycopg.Connection, chunks: Sequence[Chunk]) -> list[int]:
-    """Insere os chunks e devolve os ids, na mesma ordem da entrada."""
+    """Insere os chunks e devolve os ids, na mesma ordem da entrada.
+
+    executemany usa o modo pipeline do psycopg: um documento de 1.000 chunks vai numa
+    leva só, em vez de 1.000 idas e voltas ao banco remoto.
+    """
+    if not chunks:
+        return []
     ids: list[int] = []
     with conn.cursor() as cur:
-        for c in chunks:
-            cur.execute(
-                """
-                INSERT INTO chunks (doc_id, estrategia, inicio, fim, texto, caminho_estrutural)
-                VALUES (%s, %s, %s, %s, %s, %s)
-                RETURNING id
-                """,
-                (c.doc_id, c.estrategia, c.inicio, c.fim, c.texto, c.caminho_estrutural),
-            )
-            linha = cur.fetchone()
+        cur.executemany(
+            """
+            INSERT INTO chunks (doc_id, estrategia, inicio, fim, texto, caminho_estrutural)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id
+            """,
+            [
+                (c.doc_id, c.estrategia, c.inicio, c.fim, c.texto, c.caminho_estrutural)
+                for c in chunks
+            ],
+            returning=True,
+        )
+        for resultado in cur.results():
+            linha = resultado.fetchone()
             assert linha is not None
             ids.append(linha[0])
     return ids
