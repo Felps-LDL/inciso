@@ -1,13 +1,6 @@
-"""Testes de integração com o Postgres + pgvector.
-
-Sem banco acessível, os testes são pulados localmente. No CI, INCISO_EXIGIR_BANCO=1 transforma o
-pulo em falha: um serviço mal configurado não pode passar despercebido como "verde".
-Cada teste roda dentro de uma transação desfeita no final, então o banco não acumula lixo.
-"""
+"""Testes de integração com o Postgres + pgvector (fixture `conn` em conftest.py)."""
 
 import math
-import os
-from collections.abc import Iterator
 from datetime import date
 
 import psycopg
@@ -19,27 +12,12 @@ from inciso.banco import (
     Documento,
     aplicar_esquema,
     buscar,
-    conectar,
     inserir_chunks,
     inserir_documento,
     inserir_embeddings,
 )
 
 DOC = "cvm-resolucao-175-2022"
-
-
-@pytest.fixture
-def conn() -> Iterator[psycopg.Connection]:
-    try:
-        conexao = conectar()
-    except psycopg.OperationalError as erro:
-        if os.environ.get("INCISO_EXIGIR_BANCO") == "1":
-            pytest.fail(f"banco exigido e inacessível: {erro}")
-        pytest.skip("banco inacessível; defina DATABASE_URL ou suba o local com: uv run poe db")
-    with conexao:
-        aplicar_esquema(conexao)
-        yield conexao
-        conexao.rollback()
 
 
 def _documento(doc_id: str = DOC) -> Documento:
