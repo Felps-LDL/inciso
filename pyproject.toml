@@ -7,6 +7,8 @@ requires-python = ">=3.13"
 dependencies = [
     "psycopg[binary]>=3.3.9",
     "pypdf>=7.1.0",
+    "sentence-transformers>=6.3.0",
+    "torch>=2.15.0",
 ]
 
 [dependency-groups]
@@ -15,6 +17,15 @@ dev = [
     "pytest",
     "ruff",
 ]
+
+# torch só-CPU: no Linux (CI), o wheel do PyPI traz ~2 GB de bibliotecas CUDA que nunca usamos.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
 
 [build-system]
 requires = ["uv_build>=0.13,<0.14"]
@@ -41,6 +52,7 @@ test = { cmd = "pytest", help = "Roda os testes" }
 check = { sequence = ["lint", "fmt-check", "test"], help = "Tudo que o CI roda, na mesma ordem" }
 ingerir = { cmd = "python -m inciso.ingestao", help = "Ingere os PDFs de corpus/ no banco" }
 chunkear = { cmd = "python -m inciso.chunking", help = "Gera os chunks de tamanho fixo no banco" }
+embedar = { cmd = "python -m inciso.embeddings", help = "Gera os embeddings dos chunks no banco" }
 db = { cmd = "docker compose up -d --wait", help = "Sobe o Postgres + pgvector local" }
 db-parar = { cmd = "docker compose stop", help = "Para o Postgres local (mantém os dados)" }
 db-apagar = { cmd = "docker compose down -v", help = "Remove o Postgres local e os dados" }
