@@ -26,7 +26,12 @@ hora. Cada item diz o porquê, para não ser preciso redescobrir o motivo depois
   - **Sumário no início do documento.** A CVM 175 abre com um índice ("Art. 5º
     ............ 16"). Ele vira chunks que repetem os títulos sem conteúdo e podem
     competir com o trecho certo. Medir na Fase 1 se ele aparece nos top-5 errados,
-    antes de decidir se a normalização deve removê-lo.
+    antes de decidir se a normalização deve removê-lo. No `fixo-800-100`, 54 dos
+    1.004 chunks (5%) têm pontilhado de sumário: só título de capítulo e página.
+- **Chunking `fixo-800-100` feito** (`src/inciso/chunking.py`, `uv run poe chunkear`).
+  Na CVM 175: 1.004 chunks, mediana de 797 caracteres (mínimo 683), sobreposição
+  mediana de 97. A sobreposição cai a 3 nas linhas de pontilhado do sumário, que são
+  "palavras" de 90 pontos sem espaço.
 - **Medir o tamanho real do corpus** com os 5 primeiros PDFs. A estimativa é de
   20 a 60 MB para 60 documentos.
 
@@ -108,6 +113,11 @@ documentos nos temas existentes, não temas novos.
   DA RESOLUÇÃO..." como cabeçalho. Se o título de abertura do anexo for idêntico,
   ele sai junto. O parser estrutural precisa de outro sinal para saber onde cada
   anexo começa: a numeração dos artigos recomeça em cada anexo.
+- **Artigos gigantes.** Na CVM 175, a mediana do artigo é 575 caracteres (84% até
+  1.500), mas um "artigo" tem 123.653 caracteres e uma linha tem 16.566: são os
+  formulários e suplementos dos anexos, sem marcador de dispositivo. O chunking
+  estrutural precisa de um teto de tamanho, com corte por tamanho dentro do
+  dispositivo, senão um chunk sozinho engole o formulário inteiro.
 
 ## Fase 3
 
