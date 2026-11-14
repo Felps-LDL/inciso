@@ -12,6 +12,13 @@ hora. Cada item diz o porquê, para não ser preciso redescobrir o motivo depois
   romano sobrevivem, sem cabeçalho de página nem hifenização no meio de artigo.
   Se não sobreviverem, o corpus troca para a versão HTML oficial. É o item mais
   caro de errar: o parser da Fase 2 depende disso.
+  - **CVM 175 consolidada (2026-11-13): passou.** Com o
+    `scripts/inspecionar_extracao.py`, pypdf e pdfplumber deram o mesmo resultado:
+    399 páginas, "Art. 4º", "§ 1º" e "I –" intactos, só 7 palavras quebradas por
+    hífen. O problema encontrado foi o timbre da CVM (5 linhas de endereço) e o
+    número da página, repetidos em todas as páginas e caindo **no meio do artigo**
+    (entre o § 3º e o § 4º do art. 5º). A normalização da ingestão precisa remover
+    as linhas repetidas entre páginas. Falta testar um documento do Bacen.
 - **Medir o tamanho real do corpus** com os 5 primeiros PDFs. A estimativa é de
   20 a 60 MB para 60 documentos.
 

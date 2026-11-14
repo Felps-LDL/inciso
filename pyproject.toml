@@ -25,6 +25,8 @@ target-version = "py313"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+# Travessão e ordinal são marcadores reais do texto normativo ("I – ...", "Art. 1º").
+allowed-confusables = ["–", "—", "º"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
