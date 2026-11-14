@@ -341,4 +341,4 @@ O trabalho vai em três etapas:
 Depois do corpus vem o **conjunto de avaliação**: perguntas que alguém faria
 sobre essas normas, cada uma com o trecho exato que a responde. Ele segue a mesma
 regra: **5 perguntas no piloto**, revisadas pelo Felipe, e só depois as outras. O
-guia dessa etapa chega junto com ela.
+guia dessa etapa está em [`eval/README.md`](../eval/README.md).
