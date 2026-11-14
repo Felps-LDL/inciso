@@ -19,6 +19,14 @@ hora. Cada item diz o porquê, para não ser preciso redescobrir o motivo depois
     número da página, repetidos em todas as páginas e caindo **no meio do artigo**
     (entre o § 3º e o § 4º do art. 5º). A normalização da ingestão precisa remover
     as linhas repetidas entre páginas. Falta testar um documento do Bacen.
+  - **Ingestão feita** (`src/inciso/ingestao.py`, `uv run poe ingerir`). Na CVM 175,
+    a normalização tirou o timbre, os números de página e os títulos correntes, e
+    o texto foi de 925 mil para 703 mil caracteres: 24% era ruído de página. O que
+    sobrou de "www.cvm.gov.br" é conteúdo real (formulários dos anexos).
+  - **Sumário no início do documento.** A CVM 175 abre com um índice ("Art. 5º
+    ............ 16"). Ele vira chunks que repetem os títulos sem conteúdo e podem
+    competir com o trecho certo. Medir na Fase 1 se ele aparece nos top-5 errados,
+    antes de decidir se a normalização deve removê-lo.
 - **Medir o tamanho real do corpus** com os 5 primeiros PDFs. A estimativa é de
   20 a 60 MB para 60 documentos.
 
@@ -93,6 +101,13 @@ documentos nos temas existentes, não temas novos.
 - Execuções de avaliação registradas em `results/*.json`, versionado: estratégia,
   modelo, k, critério de acerto, versão do conjunto de avaliação e commit. É isso
   que liga cada número do README ao código que o produziu.
+
+## Fase 2
+
+- **Início dos anexos.** A normalização remove o título corrente "ANEXO NORMATIVO I
+  DA RESOLUÇÃO..." como cabeçalho. Se o título de abertura do anexo for idêntico,
+  ele sai junto. O parser estrutural precisa de outro sinal para saber onde cada
+  anexo começa: a numeração dos artigos recomeça em cada anexo.
 
 ## Fase 3
 
