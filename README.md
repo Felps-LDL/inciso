@@ -82,16 +82,23 @@ ficou para depois, em [`docs/backlog.md`](docs/backlog.md).
 
 ## Como rodar
 
-Requisitos: [uv](https://docs.astral.sh/uv/). Ele instala o Python certo
-sozinho.
+Requisitos: [uv](https://docs.astral.sh/uv/), que instala o Python certo
+sozinho, e um Postgres com pgvector, por um destes caminhos:
+
+- **Gerenciado** (ex.: Neon, plano gratuito): defina a variável `DATABASE_URL` com
+  a URL de conexão.
+- **Docker**: `uv run poe db` sobe o `compose.yaml`, com a mesma imagem do CI. Sem
+  `DATABASE_URL`, o código usa esse banco local.
 
 ```
 uv sync
 uv run poe check
 ```
 
-`poe check` roda o lint, a conferência de formatação e os testes, na mesma ordem
-do CI. Para ver as outras tarefas, use `uv run poe`.
+- `poe check` roda o lint, a conferência de formatação e os testes, na mesma ordem
+  do CI. Sem o banco no ar, os testes de integração são pulados localmente. No CI
+  eles são obrigatórios.
+- Para ver as outras tarefas, use `uv run poe`.
 
 ## Autores
 

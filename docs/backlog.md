@@ -12,11 +12,33 @@ hora. Cada item diz o porquê, para não ser preciso redescobrir o motivo depois
   romano sobrevivem, sem cabeçalho de página nem hifenização no meio de artigo.
   Se não sobreviverem, o corpus troca para a versão HTML oficial. É o item mais
   caro de errar: o parser da Fase 2 depende disso.
+  - **CVM 175 consolidada (2026-11-13): passou.** Com o
+    `scripts/inspecionar_extracao.py`, pypdf e pdfplumber deram o mesmo resultado:
+    399 páginas, "Art. 4º", "§ 1º" e "I –" intactos, só 7 palavras quebradas por
+    hífen. O problema encontrado foi o timbre da CVM (5 linhas de endereço) e o
+    número da página, repetidos em todas as páginas e caindo **no meio do artigo**
+    (entre o § 3º e o § 4º do art. 5º). A normalização da ingestão precisa remover
+    as linhas repetidas entre páginas. Falta testar um documento do Bacen.
+  - **Ingestão feita** (`src/inciso/ingestao.py`, `uv run poe ingerir`). Na CVM 175,
+    a normalização tirou o timbre, os números de página e os títulos correntes, e
+    o texto foi de 925 mil para 703 mil caracteres: 24% era ruído de página. O que
+    sobrou de "www.cvm.gov.br" é conteúdo real (formulários dos anexos).
+  - **Sumário no início do documento.** A CVM 175 abre com um índice ("Art. 5º
+    ............ 16"). Ele vira chunks que repetem os títulos sem conteúdo e podem
+    competir com o trecho certo. Medir na Fase 1 se ele aparece nos top-5 errados,
+    antes de decidir se a normalização deve removê-lo. No `fixo-800-100`, 54 dos
+    1.004 chunks (5%) têm pontilhado de sumário: só título de capítulo e página.
+- **Chunking `fixo-800-100` feito** (`src/inciso/chunking.py`, `uv run poe chunkear`).
+  Na CVM 175: 1.004 chunks, mediana de 797 caracteres (mínimo 683), sobreposição
+  mediana de 97. A sobreposição cai a 3 nas linhas de pontilhado do sumário, que são
+  "palavras" de 90 pontos sem espaço.
 - **Medir o tamanho real do corpus** com os 5 primeiros PDFs. A estimativa é de
   20 a 60 MB para 60 documentos.
 
 ### Infraestrutura
 
+- **Feito:** `compose.yaml`, `src/inciso/esquema.sql`, `src/inciso/banco.py`, com
+  busca exata por cosseno e serviço no CI. ADR 0003.
 - **Postgres + pgvector local via Docker Desktop**, com backend WSL2
   (`wsl --install` exige reiniciar o Windows; depois,
   `winget install --id Docker.DockerDesktop -e`). A mesma imagem
@@ -27,7 +49,10 @@ hora. Cada item diz o porquê, para não ser preciso redescobrir o motivo depois
 
 ### Formato do gabarito de avaliação (primeiro ADR da Fase 1)
 
-Precisa ser decidido **antes** de o Emerson escrever a primeira pergunta.
+**Decidido no ADR 0002 e implementado em `src/inciso/avaliacao.py`.** Guia do
+Emerson em `eval/README.md`, com o formato de `eval/perguntas.csv`. Falta a
+validação no CI que o guia promete (doc_id existe, trecho achado no texto). MRR como métrica secundária, para capturar a
+posição dentro do top-k, só entra se a comparação das Fases 2 e 3 precisar dele.
 
 - O gabarito é **independente do chunking**: `doc_id` + **trecho literal** + a
   referência estrutural legível (por exemplo, "art. 5º, § 2º, III"). Nunca um id
@@ -83,6 +108,18 @@ documentos nos temas existentes, não temas novos.
   modelo, k, critério de acerto, versão do conjunto de avaliação e commit. É isso
   que liga cada número do README ao código que o produziu.
 
+## Fase 2
+
+- **Início dos anexos.** A normalização remove o título corrente "ANEXO NORMATIVO I
+  DA RESOLUÇÃO..." como cabeçalho. Se o título de abertura do anexo for idêntico,
+  ele sai junto. O parser estrutural precisa de outro sinal para saber onde cada
+  anexo começa: a numeração dos artigos recomeça em cada anexo.
+- **Artigos gigantes.** Na CVM 175, a mediana do artigo é 575 caracteres (84% até
+  1.500), mas um "artigo" tem 123.653 caracteres e uma linha tem 16.566: são os
+  formulários e suplementos dos anexos, sem marcador de dispositivo. O chunking
+  estrutural precisa de um teto de tamanho, com corte por tamanho dentro do
+  dispositivo, senão um chunk sozinho engole o formulário inteiro.
+
 ## Fase 3
 
 - Modelos com mais de 2.000 dimensões (por exemplo, os comerciais de 3.072)
@@ -92,11 +129,24 @@ documentos nos temas existentes, não temas novos.
 
 ## Fase 4
 
+- Se o Emerson precisar rodar a API na máquina dele (Windows), o Controle
+  Inteligente de Aplicativos pode bloquear as bibliotecas compiladas, como
+  aconteceu com o `psycopg` na máquina do Felipe. Saídas: a API roda num
+  container Docker, ou na máquina do Felipe.
+
 - Se a API precisar de latência menor que a da busca exata, criar um índice HNSW
   **parcial por modelo** (`WHERE model = ...`, com cast para a dimensão). O
   esquema não muda.
 
 ## Sem fase definida
+
+- **WSL2 e Docker na máquina do Felipe.** Os recursos apareciam ativos, mas o WSL
+  dizia "virtualização não habilitada". Na reinstalação, o
+  `dism /enable-feature:VirtualMachinePlatform` ficou preso no download pelo
+  Windows Update (o progresso alternava entre 0% e 50%). Hoje os recursos estão
+  desativados. Tentar de novo depois de uma próxima atualização do Windows. Se a
+  mensagem original voltar, abrir uma issue em microsoft/WSL com a saída do
+  `wsl --status`. Até lá, o desenvolvimento local usa o Neon (ADR 0003).
 
 - Hooks de pre-commit (ruff). Hoje o CI cobre isso. Reavaliar se o vai-e-volta
   de PR por formatação começar a custar tempo.
