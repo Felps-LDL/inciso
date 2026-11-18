@@ -23,6 +23,15 @@ hora. Cada item diz o porquê, para não ser preciso redescobrir o motivo depois
     a normalização tirou o timbre, os números de página e os títulos correntes, e
     o texto foi de 925 mil para 703 mil caracteres: 24% era ruído de página. O que
     sobrou de "www.cvm.gov.br" é conteúdo real (formulários dos anexos).
+  - **Piloto de 5 documentos (2026-11-17): passou, com a normalização `norm-2`.** A
+    estrutura extrai bem nos cinco, inclusive no Bacen. O problema foi outro, e a
+    inspeção da CVM 175 tinha deixado passar: **o texto consolidado dos três órgãos
+    mantém a redação antiga, riscada, antes da nova**, e a extração perde o risco.
+    As duas versões viravam texto normal, quase idênticas, disputando o top-5.
+    Saíram 156 dispositivos antigos (3% a 13% do texto, conforme o documento), as
+    notas de alteração, os links e as ligaduras "ﬁ"/"ﬂ" da CMN 4.966. A ingestão
+    avisa quando sobra um número de artigo repetido na mesma parte; hoje não sobra
+    nenhum nos cinco.
   - **Sumário no início do documento.** A CVM 175 abre com um índice ("Art. 5º
     ............ 16"). Ele vira chunks que repetem os títulos sem conteúdo e podem
     competir com o trecho certo. Medir na Fase 1 se ele aparece nos top-5 errados,
@@ -114,6 +123,11 @@ documentos nos temas existentes, não temas novos.
   DA RESOLUÇÃO..." como cabeçalho. Se o título de abertura do anexo for idêntico,
   ele sai junto. O parser estrutural precisa de outro sinal para saber onde cada
   anexo começa: a numeração dos artigos recomeça em cada anexo.
+- **"Anexo" no meio da frase vira quebra de linha.** A normalização trata qualquer
+  linha do PDF que começa com "Anexo" como título, então uma frase como "...deste
+  Anexo Normativo I, desde que..." é partida em duas quando "Anexo" cai no início
+  de uma linha do PDF. O parser estrutural não pode usar essa quebra como sinal de
+  anexo: exigir caixa alta ("ANEXO") ou a numeração recomeçando.
 - **Artigos gigantes.** Na CVM 175, a mediana do artigo é 575 caracteres (84% até
   1.500), mas um "artigo" tem 123.653 caracteres e uma linha tem 16.566: são os
   formulários e suplementos dos anexos, sem marcador de dispositivo. O chunking

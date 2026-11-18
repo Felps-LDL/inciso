@@ -5,7 +5,7 @@ import pytest
 
 from inciso.banco import Chunk, inserir_chunks
 from inciso.corpus import COLUNAS
-from inciso.ingestao import ingerir_corpus, normalizar, versao_extracao
+from inciso.ingestao import artigos_repetidos, ingerir_corpus, normalizar, versao_extracao
 
 TIMBRE = [
     "COMISSÃO DE VALORES MOBILIÁRIOS",
@@ -117,6 +117,199 @@ def test_paginas_vazias() -> None:
     assert normalizar([]) == ""
 
 
+# --- texto consolidado: só a redação vigente ----------------------------------------------
+
+NOTA_BCB = "(Redação dada, a partir de 1º/9/2021, pela Resolução BCB nº 119, de 27/7/2021.)"
+
+
+def test_ligaduras_viram_letras() -> None:
+    assert normalizar(["instrumento ﬁnanceiro e ﬂuxo de caixa"]) == (
+        "instrumento financeiro e fluxo de caixa"
+    )
+
+
+def test_caractere_de_uso_privado_sai() -> None:
+    assert normalizar(["I - arrendamento mercantil; e \nII - outros"]) == (
+        "I - arrendamento mercantil; e\nII - outros"
+    )
+
+
+def test_redacao_antiga_de_inciso_sai_e_a_nota_tambem() -> None:
+    # Circular 3.978, art. 28, § 2º: a versão riscada vem logo antes da vigente.
+    texto = normalizar(
+        [
+            "§ 2º No processo de identificação do cliente devem ser coletados:\n"
+            "I - o nome completo, o endereço residencial e o CPF; e\n"
+            f"I - o nome completo e o CPF; e {NOTA_BCB}\n"
+            "II - a denominação social e o CNPJ."
+        ]
+    )
+    assert texto.split("\n") == [
+        "§ 2º No processo de identificação do cliente devem ser coletados:",
+        "I - o nome completo e o CPF; e",
+        "II - a denominação social e o CNPJ.",
+    ]
+
+
+def test_redacao_antiga_de_artigo_quebrada_em_linhas() -> None:
+    texto = normalizar(
+        [
+            "Art. 70. Esta Circular entra em vigor\nem 1º de julho de 2020.\n"
+            "Art. 70. Esta Circular entra em vigor em 1º de outubro de 2020. (Redação dada,\n"
+            "a partir de 1º/6/2020, pela Circular nº 4.005, de 16/4/2020.)"
+        ]
+    )
+    assert texto == "Art. 70. Esta Circular entra em vigor em 1º de outubro de 2020."
+
+
+def test_revogado_tira_o_texto_antigo_e_fica_a_marca() -> None:
+    texto = normalizar(
+        [
+            "Art. 68. A Circular nº 3.691 passa a vigorar com alterações.\n"
+            "Art. 68. (Revogado pela Resolução BCB nº 282, de 31/12/2022.)\n"
+            "Art. 69. Ficam revogados:"
+        ]
+    )
+    assert texto.split("\n") == [
+        "Art. 68. (Revogado pela Resolução BCB nº 282, de 31/12/2022.)",
+        "Art. 69. Ficam revogados:",
+    ]
+
+
+def test_incluido_mantem_o_anterior_e_tira_a_nota() -> None:
+    texto = normalizar(
+        [
+            "I - primeiro inciso;\n"
+            "II - inciso novo; (Incluído, a partir de 1º/10/2023, pela Resolução CMN nº 5.100.)"
+        ]
+    )
+    assert texto == "I - primeiro inciso;\nII - inciso novo;"
+
+
+def test_link_quebrado_entre_linhas_sai() -> None:
+    texto = normalizar(
+        [
+            "I - texto vigente; (Redação dada pela Resolução CMN\n"
+            "nº 5.100, de 24/8/2023.) <https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?\n"
+            "tipo=Resolu%C3%A7%C3%A3o%20CMN&numero=5100>\n"
+            "II - outro."
+        ]
+    )
+    assert texto == "I - texto vigente;\nII - outro."
+
+
+def test_nota_cortada_na_mudanca_de_pagina_sai() -> None:
+    # O fim "24/8/2023.) <https://...>" caiu na borda da página e saiu como rodapé.
+    texto = normalizar(
+        [
+            "I - prazo de até doze meses; (Incluído, a partir de 1º/10/2023, pela\n"
+            "Resolução CMN nº 5.100, de\nII - outro."
+        ]
+    )
+    assert texto == "I - prazo de até doze meses;\nII - outro."
+
+
+CVM_187 = "Resolução CVM nº 187, de 27 de setembro de 2023."
+
+
+def test_redacao_antiga_na_cvm() -> None:
+    texto = normalizar(
+        [
+            "VI – substituição do administrador fiduciário ou portabilidade;\n"
+            f"VI – transferência de administração ou portabilidade; • Inciso VI com redação "
+            f"dada pela {CVM_187}\n"
+            "Parágrafo único. Nos casos previstos, o valor deve ter laudo.\n"
+            "Parágrafo único. REVOGADO • Parágrafo único revogado pela Resolução CVM nº 181, "
+            "de 28 de março de 2023.\n"
+            f"§ 3º Texto novo. • § 3º incluído pela {CVM_187}"
+        ]
+    )
+    assert texto.split("\n") == [
+        "VI – transferência de administração ou portabilidade;",
+        "Parágrafo único. REVOGADO",
+        "§ 3º Texto novo.",
+    ]
+
+
+def test_nota_da_cvm_no_meio_da_linha_tira_so_a_nota() -> None:
+    texto = normalizar([f"3. Datas. • Item 3 com redação dada pela {CVM_187} 4. Imóvel."])
+    assert texto == "3. Datas. 4. Imóvel."
+
+
+def test_marcador_de_formulario_nao_e_nota() -> None:
+    assert normalizar(["● [ ]% do patrimônio líquido ao ano"]) == (
+        "● [ ]% do patrimônio líquido ao ano"
+    )
+
+
+def test_versao_nova_sem_nota_tambem_substitui() -> None:
+    # CVM 175, art. 140: a redação nova não traz nota nenhuma.
+    texto = normalizar(
+        [
+            "Art. 140. Esta Resolução entra em vigor em 3 de abril de 2023.\n"
+            "Art. 140. Esta Resolução entra em vigor em 2 de outubro de 2023.\n"
+            "§ 1º O art. 48 entra em vigor depois."
+        ]
+    )
+    assert texto.split("\n") == [
+        "Art. 140. Esta Resolução entra em vigor em 2 de outubro de 2023.",
+        "§ 1º O art. 48 entra em vigor depois.",
+    ]
+
+
+def test_tres_versoes_seguidas_fica_a_ultima() -> None:
+    texto = normalizar(
+        ["Art. 134. Adaptar até 2023.\nArt. 134. Adaptar até 2024.\nArt. 134. Adaptar até 2025."]
+    )
+    assert texto == "Art. 134. Adaptar até 2025."
+
+
+@pytest.mark.parametrize(
+    "linhas",
+    [
+        "§ 3º Regra.\n§ 3º-A Regra incluída.",
+        "Art. 5º Caput.\nArt. 5º-A Artigo incluído.",
+        "I – um;\nII – dois;\nIII – três.",
+        "a) uma;\nI – outra lista;\na) de novo.",
+    ],
+)
+def test_rotulos_diferentes_nao_se_substituem(linhas: str) -> None:
+    assert normalizar([linhas]) == linhas
+
+
+def test_artigo_antigo_com_filhos_sai_inteiro_e_o_titulo_fica() -> None:
+    # CVM 175, Anexo III, arts. 6 e 17.
+    texto = normalizar(
+        [
+            "Art. 16. Anterior.\n"
+            "Art. 17. O pedido de representação deve:\n"
+            "I – conter os elementos;\n"
+            "§ 5º Os custos são do administrador.\n"
+            "Seção II – Representação\n"
+            "Art. 17 – REVOGADO\n"
+            "Art. 18. Seguinte."
+        ]
+    )
+    assert texto.split("\n") == [
+        "Art. 16. Anterior.",
+        "Seção II – Representação",
+        "Art. 17 – REVOGADO",
+        "Art. 18. Seguinte.",
+    ]
+
+
+def test_mesmo_numero_em_anexos_diferentes_nao_se_substitui() -> None:
+    texto = "Art. 1º Do corpo:\nI – x.\nANEXO I\nArt. 1º Do anexo."
+    assert normalizar([texto]) == texto
+
+
+def test_artigos_repetidos_na_mesma_parte() -> None:
+    # Com outro artigo no meio, não é redação antiga adjacente: só o aviso pega.
+    texto = "Art. 1º A.\nArt. 2º B.\nArt. 1º De novo.\nANEXO I\nArt. 1º Do anexo."
+    assert artigos_repetidos(texto) == ["1"]
+    assert artigos_repetidos("Art. 5º A.\nArt. 5º-A B.\nArt. 70–A C.\nArt. 70-B D.") == []
+
+
 # --- ingestão no banco ------------------------------------------------------------------
 
 LINHA = {
@@ -178,6 +371,14 @@ def test_documento_fora_do_controle_e_removido(conn: psycopg.Connection, tmp_pat
     resumo = ingerir_corpus(conn, _corpus(vazio), extrair=_extrair_falso)
     assert resumo.removidos == 1
     assert conn.execute("SELECT count(*) FROM documentos").fetchone() == (0,)
+
+
+def test_artigo_repetido_vira_aviso(conn: psycopg.Connection, tmp_path: Path) -> None:
+    def extrair(_: Path) -> list[str]:
+        return ["Art. 1º A.\nArt. 2º B.\nArt. 1º De novo."]
+
+    resumo = ingerir_corpus(conn, _corpus(tmp_path, LINHA), extrair=extrair)
+    assert resumo.avisos == ("cvm-resolucao-175-2022: artigo repetido na mesma parte: 1",)
 
 
 def test_corpus_invalido_nao_ingere(conn: psycopg.Connection, tmp_path: Path) -> None:
