@@ -24,9 +24,11 @@ Então velocidade no código e cuidado nos conceitos de recuperação.
 
 ## Estado atual
 
-Fase: **1** (a começar)
-Última coisa concluída: Fase 0 (2026-11-11): uv + poe, CI com o check `check` validado
-contra quatro quebras de propósito, `main` protegida, validador e guia do corpus.
+Fase: **1** (em andamento, PR #3 em rascunho)
+Última coisa concluída (2026-11-12): recall@k por cobertura de trecho (ADR 0002) e
+Postgres + pgvector com busca exata (ADR 0003); banco local no Neon via `DATABASE_URL`.
+Próximo: teste de extração de texto dos PDFs, com o piloto do Emerson (CVM 175 já
+enviada na branch `corpus/primeiro-documento`, ainda sem PR).
 
 > Atualize estas duas linhas ao fim de cada sessão.
 
@@ -104,8 +106,10 @@ linhas antes de codar**:
 - por que uma consulta falhou: o texto não casa, o chunk está grande demais, o
   trecho certo veio em segundo lugar
 
-Essas são as perguntas de entrevista. Se ele não souber responder, o projeto não
-serviu para nada, por mais rápido que tenha ficado.
+Essas são as perguntas de entrevista. O Felipe está **aprendendo** RAG, embeddings
+e banco vetorial neste projeto. Então o trabalho é explicar o conceito com exemplo
+concreto do próprio corpus, e não cobrar resposta exata. Se ele errar um conceito
+(por exemplo, achar que RAG treina o modelo), corrija com clareza, sem tom de prova.
 
 ## Modo Emerson
 
@@ -230,8 +234,9 @@ confiar. Aqui vale ir devagar, mesmo no modo Felipe.
 - Comentário só para explicar **por quê**, nunca o quê.
 - **Nenhum número no README sem o código que o produziu.** Resultado que não dá
   para reproduzir rodando um comando não entra.
-- **O Felipe precisa saber explicar qualquer número do README.** Essa é a trava
-  que substitui todas as outras. Se ele não souber, revisem antes de seguir.
+- **Todo número do README precisa vir com a explicação do que ele mede.** Se o
+  Felipe não souber explicar um número, explique o conceito por trás antes de
+  seguir. Não é uma trava, é a hora de aprender.
 - **O Emerson precisa saber explicar qualquer linha que leve o nome dele.** Se
   não souber, o código volta — por mais que funcione.
 - Se o Felipe estiver errado, diga.
@@ -241,8 +246,10 @@ confiar. Aqui vale ir devagar, mesmo no modo Felipe.
 
 1. ADR da decisão principal.
 2. README e "Estado atual" atualizados, com os números medidos.
-3. **Cinco perguntas de entrevista** ao Felipe sobre o que foi construído. As
-   quatro obrigatórias sobre RAG, em algum momento do projeto:
+3. **Cinco perguntas de entrevista** ao Felipe sobre o que foi construído, em tom
+   de conversa e não de prova: ele responde como entendeu, você completa o que
+   faltou, e a fase seguinte não trava por resposta imprecisa. As quatro
+   obrigatórias sobre RAG, em algum momento do projeto:
    - Como você dividiu os documentos em pedaços, e por que daquele jeito?
    - Qual modelo de embedding, e por que não outro?
    - Como você mediu se a recuperação está boa?

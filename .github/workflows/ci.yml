@@ -15,6 +15,24 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.7-pg18
+        env:
+          POSTGRES_USER: inciso
+          POSTGRES_PASSWORD: inciso
+          POSTGRES_DB: inciso
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U inciso -d inciso"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      DATABASE_URL: postgresql://inciso:inciso@localhost:5432/inciso
+      # Sem banco, os testes de integração falham em vez de serem pulados.
+      INCISO_EXIGIR_BANCO: "1"
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
